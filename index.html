@@ -78,9 +78,9 @@ section.panel.on{display:block}
 .cal button.day.purge .mk{background:var(--lx)}
 .cal button.day:disabled{cursor:default}
 .cal button.day:disabled .n{color:var(--line)}
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;padding-left:calc(100% / 14 - 9px);font-size:12px;color:var(--muted)}
 .legend span{display:flex;align-items:center;gap:6px}
-.legend i.bar{width:16px;height:2px;border-radius:2px;background:var(--lx)}
+.legend i.bar{width:18px;height:2px;border-radius:2px;background:var(--lx)}
 .legend i.recdot{width:8px;height:8px;border-radius:50%;background:var(--ink)}
 
 /* day head */
@@ -144,6 +144,7 @@ section.panel.on{display:block}
 textarea,input[type=text]{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--canvas);color:var(--ink);font:inherit;font-size:15px;padding:12px;letter-spacing:-0.015em}
 textarea:focus,input[type=text]:focus{outline:none;border:2px solid var(--ink);padding:11px}
 textarea{min-height:96px;resize:vertical}
+#memo{min-height:192px}
 ::placeholder{color:var(--soft)}
 
 /* zones */
@@ -256,6 +257,8 @@ textarea{min-height:96px;resize:vertical}
 .form label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px}
 .seg{display:flex;flex-wrap:wrap;background:var(--bg3);border-radius:999px;padding:3px;gap:2px}
 .seg button{flex:1;border:none;background:none;padding:8px 8px;border-radius:999px;font-size:13.5px;color:var(--muted);white-space:nowrap}
+.seg.one{flex-wrap:nowrap}
+.seg.one button{flex:1 1 auto;min-width:0;padding:8px 2px;font-size:11.5px;letter-spacing:-0.03em}
 .seg button[aria-pressed="true"]{background:var(--canvas);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
 .formbtns{display:flex;gap:8px;margin-top:18px;align-items:center}
 .formbtns .primary{flex:1}
@@ -300,11 +303,10 @@ textarea{min-height:96px;resize:vertical}
 
     <div class="sec">
       <h2>피부 상태</h2>
-      <p class="sub">어제 있던 트러블은 이어져요. 새로 난 것과 가라앉은 것만 눌러요.</p>
       <div class="zhead"><span>부위</span><span>새로 남</span><span>가라앉음</span><span>지금</span></div>
       <div id="zoneRows"></div>
       <div class="facesum"><span>오늘 얼굴에 있는 트러블</span><b id="faceTotal">0개</b></div>
-      <p class="fieldlabel">트러블 모양</p>
+      <p class="fieldlabel">트러블 타입</p>
       <div class="chips" id="ttypes"></div>
       <p class="fieldlabel">T존 유분</p>
       <div class="scale" id="oil"></div>
@@ -348,7 +350,7 @@ textarea{min-height:96px;resize:vertical}
       <div class="tlegend" id="tlLegend"></div>
     </div>
     <div class="sec">
-      <h2>무엇이 영향을 줄까</h2>
+      <h2>트러블 요인</h2>
       <p class="sub">요인이 있던 다음 날 새로 난 트러블을, 없던 날과 비교해요.</p>
       <div id="factors"></div>
     </div>
@@ -376,11 +378,11 @@ textarea{min-height:96px;resize:vertical}
         <label for="fName">제품 이름</label>
         <input type="text" id="fName" placeholder="브랜드와 제품명">
         <label>단계</label>
-        <div class="seg" id="fCat"></div>
+        <div class="seg one" id="fCat"></div>
         <label for="fIng">주요 성분</label>
         <input type="text" id="fIng" placeholder="예: BHA 2%, 나이아신아마이드 10%">
         <label>사용 주기</label>
-        <div class="seg" id="fCycle"></div>
+        <div class="seg" id="fCycle" style="flex-wrap:nowrap"></div>
         <label>상태</label>
         <div class="seg" id="fStatus"></div>
         <label for="fNote">고른 이유 · 사용법</label>
@@ -419,7 +421,8 @@ const PLAN = {
 
 (function(){
 const STEPS=[['cleansing','클렌징'],['toner','스킨·토너'],['serum','세럼·앰플'],['cream','크림'],['makeup','메이크업'],['spot','스팟']];
-const CYCLES=[[0,'없음'],[1,'매일'],[3,'3일'],[7,'7일'],[14,'14일'],[28,'28일'],[35,'35일']];
+const CYCLES=[[0,'없음'],[1,'매일'],[3,'3일'],[7,'1주일'],[30,'1개월']];
+const cycleName=c=>(CYCLES.find(x=>x[0]===c)||[,c+'일'])[1];
 const STATUS=[['using','사용 중'],['stock','보관 중'],['done','다 씀']];
 const PALETTE=['#D9604F','#7D78BE','#C28A2C','#3E9A8A','#4F86C6','#B0578D'];
 const SEED=[
@@ -467,7 +470,7 @@ function cycleInfo(k,P=periods){
 }
 function avgCycle(ps){if(ps.length<2)return CYCLE_DEFAULT;const g=[];for(let i=1;i<ps.length;i++)g.push(diff(ps[i-1].start,ps[i].start));return Math.round(g.reduce((a,b)=>a+b,0)/g.length)}
 const CYC_CODES=[['on','생리 중'],['w1','생리 1주 전'],['w2','생리 2주 전 (배란기)'],['w3','생리 3주 전'],['w4','생리 4주 이상 전']];
-const FOOD=['음주','당','밀가루','유제품','기름진 음식','매운 음식','야식'];
+const FOOD=['음주','당','밀가루','유제품','기름진 음식','야식'];
 const WD=['일','월','화','수','목','금','토'];
 const SEED_ENTRIES=[];
 const isPoreRaw=p=>!!p&&(p.id==='s-pore1'||(p.name.includes('모공한번')&&!p.name.includes('모공믹스')));
@@ -756,7 +759,7 @@ let invFilter='all', editing=null, form={}, openProd=null;
 function segGroup(el,items,val,on){el.innerHTML='';items.forEach(([v,l])=>{const b=document.createElement('button');b.textContent=l;b.setAttribute('aria-pressed',v===val?'true':'false');b.onclick=()=>on(v);el.appendChild(b)})}
 function renderFormSegs(){
   segGroup($('fCat'),STEPS,form.cat,v=>{form.cat=v;renderFormSegs()});
-  segGroup($('fCycle'),CYCLES,form.cycle,v=>{form.cycle=v;renderFormSegs()});
+  segGroup($('fCycle'),CYCLES.some(x=>x[0]===form.cycle)?CYCLES:[...CYCLES,[form.cycle,cycleName(form.cycle)]],form.cycle,v=>{form.cycle=v;renderFormSegs()});
   segGroup($('fStatus'),STATUS,form.status,v=>{form.status=v;renderFormSegs()});
 }
 function openForm(id,cat){
@@ -796,7 +799,7 @@ function renderInv(){
     const ps=list.filter(p=>p.cat===k);if(!ps.length)return;
     h+=`<div class="cathead">${l}<span>${ps.length}개</span></div>`;
     ps.forEach(p=>{const u=usesOf(p.id);const u30=u.filter(d=>diff(d,todayKey)<30&&d>=RECORD_START).length;
-      const meta=[p.ing,p.cycle?(p.cycle===1?'매일':p.cycle+'일마다'):'',u.length?`최근 30일 ${u30}회 · 마지막 ${md(u[u.length-1])}`:'아직 사용 기록 없음'].filter(Boolean).map(esc).join(' · ');
+      const meta=[p.ing,p.cycle?(p.cycle===1?'매일':cycleName(p.cycle)+'마다'):'',u.length?`최근 30일 ${u30}회 · 마지막 ${md(u[u.length-1])}`:'아직 사용 기록 없음'].filter(Boolean).map(esc).join(' · ');
       const op=openProd===p.id;
       h+=`<button class="prod ${p.status==='done'?'done':''}" data-id="${p.id}" aria-expanded="${op}"><span class="nm"><span>${esc(p.name)}<span class="chev">${op?'▴':'▾'}</span></span><em class="${p.status}">${STATUS.find(s=>s[0]===p.status)[1]}</em></span></button>`;
       if(op)h+=`<div class="pdetail"><span class="meta">${meta}</span>${p.note?`<span class="why">${esc(p.note)}</span>`:''}<button class="linkbtn" data-edit="${p.id}">수정</button></div>`;});
@@ -822,10 +825,10 @@ function renderStatus(E,T){
   const first=Object.keys(E).sort()[0];
   const recs=Object.values(E).filter(x=>x.date>=t.start&&x.date<=T&&x.date!==first);
   const cell=(ph,lbl)=>{const a=recs.filter(x=>phaseOf(x.date)===ph).map(x=>totalNew(x,E)),now=(ph==='purge')===ti.purge;
-    const num=a.length?`${(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1)}<small>개</small>`:'<span class="na">–</span>';
-    const det=a.length?`${a.length}일 기록`:(ph==='keep'?`${mdS(addDays(t.start,7))}부터 집계`:'첫날은 빼고 집계');
-    return `<div class="phasecell ${now?'now':''}"><span class="lbl">${lbl} 하루 평균 새로 남</span><span class="num">${num}</span><span class="det">${det}</span></div>`};
-  $('phaseStats').innerHTML=cell('purge','모공비움')+cell('keep','유지기간');
+    const num=a.length?`+${(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1)}<small>개</small>`:'<span class="na">–</span>';
+    const det=a.length?'':(ph==='keep'?`${mdS(addDays(t.start,7))}부터 집계`:'첫날은 빼고 집계');
+    return `<div class="phasecell ${now?'now':''}"><span class="lbl">${lbl} 하루 평균</span><span class="num">${num}</span>${det?`<span class="det">${det}</span>`:''}</div>`};
+  $('phaseStats').innerHTML=cell('purge','모공비움 기간')+cell('keep','유지기간');
 }
 let selDay=null;
 function alertsOf(k,E){const x=E[k];if(!x)return[];const first=Object.keys(E).sort()[0],n=newOf(x,E);
