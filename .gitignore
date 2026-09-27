@@ -1,0 +1,4 @@
+# index.html만 공개한다. 개인 문서와 기록은 올리지 않는다.
+*
+!index.html
+!.gitignore
