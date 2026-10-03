@@ -405,11 +405,11 @@ textarea{min-height:96px;resize:vertical}
 <script>
 /* Routine plan: filled in from conversations with Claude, republished as it grows. */
 const PLAN = {
-  updated: "2026-09-27",
-  trial: { name: "심플리웍스", start: "2026-09-26", round: 35 },
+  updated: "2026-10-03",
+  trial: { name: "심플리웍스", start: "2026-09-26", round: 35, extra: 1 },
   intro: "복합성(T존 지성, 볼 건조). 계절과 생리 주기 영향을 크게 받음. 9/26부터 심플리웍스 제품 위주로 변수를 줄여 관찰 중. 한 바퀴는 5주(모공비움 1주 + 유지기간 4주)이고 계속 반복.",
   items: [
-    { title: "지금: 심플리웍스", body: "한 바퀴 = 모공비움 1주차 → 유지기간 1~4주차(35일). 1번째 모공비움(9/26~10/2)은 아침·저녁 세럼한번, 저녁 모공원액 1회(9/26 사용). 문제 없으면 10/3부터 모공믹스(세럼한번 Mix 눈금 + 모공한번 1/3병). 유지기간엔 아침·저녁 모공믹스, 필요 시 아줄렌 크림. 2번째 모공비움부터는 아침·저녁 모공믹스 + 저녁 모공원액 1회(10/31~11/6, 12/5~12/11…)." },
+    { title: "지금: 심플리웍스", body: "한 바퀴 = 모공비움 1주차 → 유지기간 1~4주차(35일). 1번째 모공비움(9/26~10/3, 하루 연장)은 아침·저녁 세럼한번, 저녁 모공원액 1회(9/26 사용). 문제 없으면 10/4부터 모공믹스(세럼한번 Mix 눈금 + 모공한번 1/3병). 유지기간엔 아침·저녁 모공믹스, 필요 시 아줄렌 크림. 2번째 모공비움부터는 아침·저녁 모공믹스 + 저녁 모공원액 1회(11/1~11/7, 12/6~12/12…)." },
     { title: "클렌징", body: "아침은 세비엄 젤무쌍(약산성). 저녁은 세수한번 폼클렌저(미알칼리 비누계), 유분 많은 다음날 아침에도. 메이크업 안 한 저녁은 세비엄." },
     { title: "자외선·메이크업", body: "매일 아침 비오레 워터리 에센스. 주말 약속엔 피몽쉐 비비, 필요하면 T존에 포어 리파이너." },
     { title: "스팟", body: "화농성일 때만 국소로. 설퍼 10%는 아침, 아젤리아(아젤라산 20%, 일반의약품)는 저녁, 칼라민 파우더는 진정 보조. 같은 자리에 여러 스팟을 겹쳐 바르지 않기." },
@@ -484,12 +484,14 @@ const diff=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
 const md=k=>{const d=parse(k);return `${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`};
 let todayKey=key(new Date());
 function trialInfo(k){
-  const t=PLAN.trial;if(!t)return null;const d=diff(t.start,k);if(d<0)return null;
+  const t=PLAN.trial;if(!t||k<t.start)return null;
+  // extra: 1번째 모공비움을 늘린 날 수. 이후 일정은 모두 그만큼 밀린다.
+  const base=addDays(t.start,t.extra||0),d=Math.max(0,diff(base,k));
   const L=t.round||35,round=Math.floor(d/L)+1,r=d%L,purge=r<7,week=purge?1:Math.floor((r-7)/7)+1;
-  const roundStart=addDays(t.start,(round-1)*L),phaseStart=purge?roundStart:addDays(roundStart,7);
-  const phaseEnd=purge?addDays(roundStart,6):addDays(roundStart,L-1),weekStart=purge?roundStart:addDays(roundStart,7+(week-1)*7);
+  const rs=addDays(base,(round-1)*L),roundStart=round===1?t.start:rs,phaseStart=purge?roundStart:addDays(rs,7);
+  const phaseEnd=purge?addDays(rs,6):addDays(rs,L-1),weekStart=purge?roundStart:addDays(rs,7+(week-1)*7);
   const phase=purge?'모공비움':'유지기간';
-  return{round,week,purge,d,phase,roundStart,phaseStart,phaseEnd,weekStart,dayInWeek:diff(weekStart,k)+1,nextPurge:addDays(roundStart,L),label:`${round}번째 ${phase} ${week}주차`};
+  return{round,week,purge,d,phase,roundStart,phaseStart,phaseEnd,weekStart,dayInWeek:diff(weekStart,k)+1,nextPurge:addDays(rs,L),label:`${round}번째 ${phase} ${week}주차`};
 }
 const mdS=k=>{const d=parse(k);return `${d.getMonth()+1}/${d.getDate()}`};
 const $=id=>document.getElementById(id);
@@ -826,7 +828,7 @@ function renderStatus(E,T){
   const recs=Object.values(E).filter(x=>x.date>=t.start&&x.date<=T&&x.date!==first);
   const cell=(ph,lbl)=>{const a=recs.filter(x=>phaseOf(x.date)===ph).map(x=>totalNew(x,E)),now=(ph==='purge')===ti.purge;
     const num=a.length?`+${(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1)}<small>개</small>`:'<span class="na">–</span>';
-    const det=a.length?'':(ph==='keep'?`${mdS(addDays(t.start,7))}부터 집계`:'첫날은 빼고 집계');
+    const det=a.length?'':(ph==='keep'?`${mdS(addDays(t.start,7+(t.extra||0)))}부터 집계`:'첫날은 빼고 집계');
     return `<div class="phasecell ${now?'now':''}"><span class="lbl">${lbl} 하루 평균</span><span class="num">${num}</span>${det?`<span class="det">${det}</span>`:''}</div>`};
   $('phaseStats').innerHTML=cell('purge','모공비움 기간')+cell('keep','유지기간');
 }
