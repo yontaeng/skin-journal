@@ -61,6 +61,8 @@ section.panel{display:none;padding-top:20px}
 section.panel.on{display:block}
 .sec{padding:24px 0;border-top:1px solid var(--line2)}
 .sec.first{border-top:none;padding-top:8px}
+.memosec{margin-top:20px}
+.memosec textarea{margin-top:12px}
 
 /* calendar */
 .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -74,13 +76,19 @@ section.panel.on{display:block}
 .cal button.day.rec .n{color:var(--ink);font-weight:600}
 .cal button.day.today .n{box-shadow:inset 0 0 0 1.5px var(--ink)}
 .cal button.day.sel .n{background:var(--ink);color:var(--canvas);font-weight:600;box-shadow:none}
-.cal button.day .mk{width:18px;height:2px;border-radius:2px}
+.cal button.day .mk,.cal button.day .pk{width:18px;height:2px;border-radius:2px}
+.cal button.day.period .pk{background:var(--r)}
 .cal button.day.purge .mk{background:var(--lx)}
+.cal button.day .n{position:relative}
+.cal button.day.memo .n::after{content:"";position:absolute;top:1px;right:1px;width:7px;height:7px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--canvas)}
+.cal button.day.memo.sel .n::after{background:var(--canvas);box-shadow:0 0 0 2px var(--ink)}
 .cal button.day:disabled{cursor:default}
 .cal button.day:disabled .n{color:var(--line)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;padding-left:calc(100% / 14 - 9px);font-size:12px;color:var(--muted)}
 .legend span{display:flex;align-items:center;gap:6px}
-.legend i.bar{width:18px;height:2px;border-radius:2px;background:var(--lx)}
+.legend i.bar,.legend i.pbar{width:18px;height:2px;border-radius:2px;background:var(--lx)}
+.legend i.pbar{background:var(--r)}
+.legend i.memodot{width:7px;height:7px;border-radius:50%;background:var(--ink)}
 .legend i.recdot{width:8px;height:8px;border-radius:50%;background:var(--ink)}
 
 /* day head */
@@ -163,9 +171,11 @@ textarea{min-height:96px;resize:vertical}
 .facesum b{font-size:17px;font-weight:700;color:var(--r);line-height:1.2}
 
 /* life */
-.cyclebox{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--bg2);border-radius:14px;padding:12px 14px}
+.cyclebox{display:flex;flex-direction:column;align-items:stretch;gap:12px;background:var(--bg2);border-radius:14px;padding:12px 14px}
 #cycleLabel{display:flex;flex-direction:column;font-size:14px;color:var(--body);line-height:1.45}
 #cycleLabel b{color:var(--ink);font-weight:600}
+.cybtns{display:flex;gap:8px}
+.cybtns .smallbtn{flex:1}
 .smallbtn{border:1px solid var(--line);background:var(--canvas);border-radius:8px;height:38px;padding:0 14px;font-size:13px;font-weight:600;white-space:nowrap}
 .ghost{border:none;background:none;padding:12px 0;width:100%;font-size:14px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;margin-top:8px}
 .danger{color:var(--r-text)}
@@ -272,7 +282,6 @@ textarea{min-height:96px;resize:vertical}
 <div class="wrap">
   <nav class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="log">일지</button>
-    <button role="tab" aria-selected="false" data-tab="flow">흐름</button>
     <button role="tab" aria-selected="false" data-tab="inv">내 제품</button>
   </nav>
 
@@ -290,83 +299,18 @@ textarea{min-height:96px;resize:vertical}
     <div class="daymeta"><p class="pill" id="trialBadge" hidden></p><span id="dayState"></span></div>
     <p class="syncnote" id="syncNote" hidden></p>
 
-    <div class="sec" style="margin-top:20px">
-      <h2>아침 루틴</h2>
-      <div id="amCard" class="rcard"></div>
-      <div id="amSteps"></div>
-    </div>
-    <div class="sec" style="border-top:none;padding-top:0">
-      <h2>저녁 루틴</h2>
-      <div id="pmCard" class="rcard"></div>
-      <div id="pmSteps"></div>
-    </div>
-
-    <div class="sec">
-      <h2>피부 상태</h2>
-      <div class="zhead"><span>부위</span><span>새로 남</span><span>가라앉음</span><span>지금</span></div>
-      <div id="zoneRows"></div>
-      <div class="facesum"><span>오늘 얼굴에 있는 트러블</span><b id="faceTotal">0개</b></div>
-      <p class="fieldlabel">트러블 타입</p>
-      <div class="chips" id="ttypes"></div>
-      <p class="fieldlabel">T존 유분</p>
-      <div class="scale" id="oil"></div>
-      <div class="scaleends"><span>보송</span><span>번들</span></div>
-      <p class="fieldlabel">볼 건조</p>
-      <div class="scale" id="dry"></div>
-      <div class="scaleends"><span>촉촉</span><span>당김</span></div>
-      <p class="fieldlabel">자극 반응</p>
-      <div class="chips" id="irr"></div>
-    </div>
-
-    <div class="sec">
-      <h2>생활</h2>
-      <p class="fieldlabel" style="margin-top:14px">생리 주기</p>
-      <div class="cyclebox"><span id="cycleLabel"></span><button class="smallbtn" id="cycleBtn"></button></div>
-      <p class="fieldlabel">먹은 것</p>
-      <div class="chips" id="food"></div>
-    </div>
-
-    <div class="sec">
+    <div class="sec memosec">
       <h2>메모</h2>
-      <textarea id="memo" placeholder="오늘 피부 느낌, 특이사항" style="margin-top:12px"></textarea>
-      <button class="ghost danger" id="delDay" hidden>이 날 기록 지우기</button>
+      <textarea id="memo" placeholder="오늘의 특이사항 (피부 변화, 새로 쓴 제품 등)"></textarea>
+      <div class="stephead" style="margin-top:16px"><b>함께 기록할 제품</b><button class="linkbtn" id="prodPickBtn" aria-expanded="false">제품 선택</button></div>
+      <div class="selected" id="memoProds"></div>
+      <div class="picker" id="prodPicker" hidden></div>
     </div>
-  </section>
 
-  <!-- FLOW -->
-  <section class="panel" id="tab-flow">
-    <div class="demobar"><span id="demoMsg"></span><button class="linkbtn" id="demoBtn">예시 데이터로 미리 보기</button></div>
-    <div class="status" id="statusBlock" hidden>
-      <p class="eyebrow" id="statusEyebrow"></p>
-      <h2 class="statusTitle" id="statusTitle"></h2>
-      <p class="statusNote" id="statusNote"></p>
-      <div class="phasegrid" id="phaseStats"></div>
-    </div>
-    <div class="sec" style="border-top:none">
-      <h2>트러블 그래프</h2>
-      <p class="sub">동그라미가 있는 날은 평소와 다르게 난 날이에요. 막대를 누르면 그날과 전날 상황이 보여요.</p>
-      <div id="timeline"></div>
-      <div class="detail" id="dayDetail" hidden></div>
-      <div class="tlegend" id="tlLegend"></div>
-    </div>
     <div class="sec">
-      <h2>트러블 요인</h2>
-      <p class="sub">요인이 있던 다음 날 새로 난 트러블을, 없던 날과 비교해요.</p>
-      <div id="factors"></div>
-    </div>
-    <div class="sec" id="aiBlock" hidden>
-      <h2>Claude에게 분석 받기</h2>
-      <p class="sub">2주 이상 기록하면 패턴을 읽어 드려요.</p>
-      <div class="flowbtns"><button class="primary" id="aiBtn">기록 분석하기</button></div>
-      <div class="aiout" id="aiOut"></div>
-    </div>
-    <div class="sec" id="backupBlock">
-      <h2>기록 보관</h2>
-      <p class="sub">기록은 이 휴대폰의 브라우저에만 저장돼요. 가끔 백업 파일을 받아 두면 브라우저 데이터가 지워져도 되살릴 수 있어요.</p>
-      <div class="flowbtns"><button class="primary" id="jsonBtn">백업 파일 받기</button><button class="secondary" id="restoreBtn">백업 불러오기</button></div>
-      <input type="file" id="restoreFile" accept=".json,application/json" hidden>
-      <p class="note" id="backupNote" style="margin-top:10px"></p>
-      <button class="ghost" id="csvBtn">기록 CSV로 내보내기</button>
+      <h2>생리 주기</h2>
+      <div class="cyclebox" style="margin-top:12px"><span id="cycleLabel"></span><div class="cybtns"><button class="smallbtn" id="cyStart"></button><button class="smallbtn" id="cyEnd"></button></div></div>
+      <button class="ghost danger" id="delDay" hidden>이 날 기록 지우기</button>
     </div>
   </section>
 
@@ -398,6 +342,14 @@ textarea{min-height:96px;resize:vertical}
     <button class="ghost" id="seedBtn" hidden style="margin:0 0 10px">대화에서 정리한 제품 불러오기</button>
     <div class="seg" id="invFilter" style="margin-bottom:6px"></div>
     <div id="invList"></div>
+    <div class="sec" id="backupBlock" style="margin-top:28px">
+      <h2>기록 보관</h2>
+      <p class="sub">기록은 이 휴대폰의 브라우저에만 저장돼요. 가끔 백업 파일을 받아 두면 브라우저 데이터가 지워져도 되살릴 수 있어요.</p>
+      <div class="flowbtns"><button class="primary" id="jsonBtn">백업 파일 받기</button><button class="secondary" id="restoreBtn">백업 불러오기</button></div>
+      <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+      <p class="note" id="backupNote" style="margin-top:10px"></p>
+      <button class="ghost" id="csvBtn">기록 CSV로 내보내기</button>
+    </div>
     <p class="note" id="storeNote"></p>
   </section>
 </div>
@@ -453,7 +405,6 @@ const TTYPES=['좁쌀','블랙헤드','염증성','화농성'];
 const IRR=['없음','따가움','붉어짐','각질 일어남'];
 
 const RECORD_START='2026-09-26', MIN_MONTH='2026-09';
-const PERIOD_SEED=null; // 개인 기록은 코드에 두지 않고 백업 파일로 불러온다
 function cycleInfo(k,P=periods){
   const ps=[...P].sort((a,b)=>a.start<b.start?-1:1);
   const inP=ps.find((q,i)=>{const nxt=ps[i+1];const end=q.end||(nxt?addDays(q.start,6):null);return k>=q.start&&(end?k<=end:!nxt)});
@@ -472,9 +423,6 @@ function avgCycle(ps){if(ps.length<2)return CYCLE_DEFAULT;const g=[];for(let i=1
 const CYC_CODES=[['on','생리 중'],['w1','생리 1주 전'],['w2','생리 2주 전 (배란기)'],['w3','생리 3주 전'],['w4','생리 4주 이상 전']];
 const FOOD=['음주','당','밀가루','유제품','기름진 음식','야식'];
 const WD=['일','월','화','수','목','금','토'];
-const SEED_ENTRIES=[];
-const isPoreRaw=p=>!!p&&(p.id==='s-pore1'||(p.name.includes('모공한번')&&!p.name.includes('모공믹스')));
-
 /* dates */
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -502,25 +450,17 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 let entries={}, inventory=[], drafts={}, seeded=[], periods=[];
 const CYCLE_DEFAULT=34;
 let cur=todayKey, viewMonth=todayKey.slice(0,7);
-let dbDays=null, dbProfile=null, inflight=new Set(), dbReady=false;
 const LS='skinjournal.v2';
 
-function emptyRoutine(){const r={};STEPS.forEach(([k])=>r[k]={ids:[],note:''});return r}
-function zeroZ(){return{chin:0,nose:0,forehead:0,cheek:0}}
-function blank(k){return{date:k,am:emptyRoutine(),pm:emptyRoutine(),troubles:zeroZ(),newT:zeroZ(),healT:zeroZ(),ttypes:[],oil:0,dry:0,irr:[],cycle:'none',food:[],memo:''}}
-function norm(x){ // accept older saved shapes
-  const b=blank(x.date);
-  const r=Object.assign(b,x);
-  ['am','pm'].forEach(t=>{const src=x[t]||{};r[t]=emptyRoutine();STEPS.forEach(([k])=>{const v=src[k];if(v&&typeof v==='object'&&Array.isArray(v.ids))r[t][k]={ids:[...v.ids],note:v.note||''}})});
-  const ot=x.troubles||{};r.troubles={chin:ot.chin||0,nose:ot.nose||0,forehead:ot.forehead||0,cheek:(ot.cheek||0)+(ot.cheekL||0)+(ot.cheekR||0)};
-  if(x.newT){const n=x.newT;r.newT={chin:n.chin||0,nose:n.nose||0,forehead:n.forehead||0,cheek:n.cheek||0}}else r.newT=null;
-  if(x.healT){const n=x.healT;r.healT={chin:n.chin||0,nose:n.nose||0,forehead:n.forehead||0,cheek:n.cheek||0}}else r.healT=null;
-  ['ttypes','irr','food'].forEach(f=>{if(!Array.isArray(r[f]))r[f]=[]});
-  delete r.pmType;delete r.bb;delete r.newProd;
-  if(r.cycle==='pre')r.cycle='w1';
-  if(r.food.includes('당·밀가루'))r.food=[...new Set(r.food.flatMap(f=>f==='당·밀가루'?['당','밀가루']:[f]))];
+// 예전 기록(루틴·피부 상태·먹은 것)은 화면에서 뺐지만 저장된 값은 그대로 둔다
+function blank(k){return{date:k,memo:'',prods:[]}}
+function norm(x){
+  const r=Object.assign(blank(x.date),x);
+  if(!Array.isArray(r.prods))r.prods=[];
+  if(typeof r.memo!=='string')r.memo='';
   return r;
 }
+const hasNote=x=>!!x&&(x.memo.trim()!==''||x.prods.length>0);
 function lsLoad(){
   try{const r=JSON.parse(localStorage.getItem(LS)||'null');
     if(r){Object.values(r.entries||{}).forEach(x=>entries[x.date]=norm(x));inventory=r.inventory||[];seeded=r.seeded||[];periods=r.periods||[]}
@@ -529,35 +469,28 @@ function lsLoad(){
 }
 let lsFail=false;
 function lsSave(){try{localStorage.setItem(LS,JSON.stringify({entries,inventory,seeded,periods}));lsFail=false}catch(err){lsFail=true}
-  const n=$('syncNote');if(n&&!dbReady){n.hidden=!lsFail;n.textContent=lsFail?'이 기기에 저장하지 못했어요. 사생활 보호 모드이거나 저장 공간이 부족할 수 있어요. 흐름 탭에서 백업 파일을 받아 두세요.':''}
+  const n=$('syncNote');if(n){n.hidden=!lsFail;n.textContent=lsFail?'이 기기에 저장하지 못했어요. 사생활 보호 모드이거나 저장 공간이 부족할 수 있어요. 내 제품 탭에서 백업 파일을 받아 두세요.':''}
   return !lsFail}
 function migrateInv(){const upd=['s-aqtoner','s-pcbha','s-aqserum','s-yunjac','s-biore'];inventory.forEach(p=>{if(upd.includes(p.id)&&!(p.mig||[]).includes('v5')){const x=SEED.find(r=>r[0]===p.id);if(x){p.name=x[1];p.ing=x[3];if(p.id==='s-yunjac')p.note=x[6];p.mig=[...(p.mig||[]),'v5']}}});inventory.forEach(p=>{if(p.id==='s-pore1'&&p.name==='심플리웍스 모공한번 (포어 미니마이저)'){p.name='심플리웍스 모공한번 (모공원액)';p.note='모공원액은 모공비움 주마다 1회. 1/3병은 모공믹스용'}});inventory.forEach(p=>{if(p.id==='s-pore1'&&!(p.mig||[]).includes('v6')){p.cycle=35;p.mig=[...(p.mig||[]),'v6']}})}
 lsLoad();
-normalizeChain(entries);
 
-function carryOf(k,E=entries){const prev=Object.keys(E).filter(d=>d<k).sort().pop();return prev?clone(E[prev].troubles):zeroZ()}
-function baseOf(k){const b=blank(k);b.troubles=carryOf(k);return b}
-const savedOf=k=>entries[k]?clone(entries[k]):baseOf(k);
+const savedOf=k=>entries[k]?clone(entries[k]):blank(k);
 let e=drafts[cur]||savedOf(cur);
-const isDirty=()=>JSON.stringify(e)!==JSON.stringify(entries[e.date]?entries[e.date]:baseOf(e.date));
-let saveTimer=null,saving=false;
+const isDirty=()=>JSON.stringify(e)!==JSON.stringify(entries[e.date]?entries[e.date]:blank(e.date));
+let saveTimer=null;
 function touched(){drafts[cur]=e;clearTimeout(saveTimer);saveTimer=setTimeout(flushSave,500);updateDayState()}
 function updateDayState(){
-  const st=$('dayState');
-  st.textContent=saving?'저장 중…':isDirty()?'저장 중…':lsFail&&!dbReady?'저장 안 됨':entries[cur]?'✓ 자동 저장됨':'아직 기록 전';
+  $('dayState').textContent=isDirty()?'저장 중…':lsFail?'저장 안 됨':entries[cur]?'✓ 자동 저장됨':'아직 기록 전';
   $('delDay').hidden=!entries[cur];
 }
-async function flushSave(){
+function flushSave(){
   clearTimeout(saveTimer);saveTimer=null;
-  const x=e,k=x.date;if(!isDirty()){updateDayState();return}
-  entries[k]=clone(x);entries[k].savedAt=Date.now();delete drafts[k];normalizeChain(entries);
-  x.troubles=clone(entries[k].troubles);x.newT=clone(entries[k].newT);x.healT=clone(entries[k].healT);x.savedAt=entries[k].savedAt;
+  const x=e,k=x.date;delete drafts[k];if(!isDirty()){updateDayState();return}
+  // 메모·제품을 다 지웠고 예전 기록도 없는 날은 기록 자체를 없앤다
+  const extra=Object.keys(x).some(f=>!['date','memo','prods','savedAt'].includes(f));
+  if(!hasNote(x)&&!extra){delete entries[k];delete x.savedAt}
+  else{entries[k]=clone(x);entries[k].savedAt=Date.now();x.savedAt=entries[k].savedAt}
   lsSave();renderCal();updateDayState();
-  if(dbDays){saving=true;inflight.add(k);updateDayState();
-    try{await dbDays.doc(k).set(entries[k])}
-    catch(err){syncErr(err)}
-    finally{inflight.delete(k);saving=false;updateDayState()}
-  }
 }
 addEventListener('pagehide',()=>{if(saveTimer)flushSave()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveTimer)flushSave();if(document.visibilityState==='visible')checkToday()});
@@ -565,17 +498,15 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 function checkToday(){
   const k=key(new Date());if(k===todayKey)return;
   const wasToday=cur===todayKey;if(saveTimer)flushSave();todayKey=k;
-  if(wasToday){cur=k;editMode={am:false,pm:false};e=drafts[k]||savedOf(k);viewMonth=k.slice(0,7)}
-  renderLog();renderFlow();renderInv();
+  if(wasToday){cur=k;e=drafts[k]||savedOf(k);viewMonth=k.slice(0,7);pickOpen=false}
+  renderLog();renderInv();
 }
 addEventListener('focus',checkToday);addEventListener('pageshow',checkToday);setInterval(checkToday,60000);
 
 /* product helpers */
-const seedProd=id=>{const x=SEED.find(r=>r[0]===id);return x?{id:x[0],name:x[1],cat:x[2],ing:x[3],cycle:x[4],status:x[5],note:x[6]}:undefined};
-const prod=id=>inventory.find(p=>p.id===id)||(DEMO_ON?seedProd(id):undefined);
-let DEMO_ON=false;
+const prod=id=>inventory.find(p=>p.id===id);
 const catName=k=>(STEPS.find(s=>s[0]===k)||[,''])[1];
-function usedIds(x){const s=new Set();['am','pm'].forEach(t=>STEPS.forEach(([k])=>(x[t][k].ids||[]).forEach(i=>s.add(i))));return s}
+function usedIds(x){const s=new Set(x.prods||[]);['am','pm'].forEach(t=>{if(x[t])STEPS.forEach(([k])=>((x[t][k]||{}).ids||[]).forEach(i=>s.add(i)))});return s}
 function usesOf(pid){return Object.keys(entries).filter(k=>usedIds(entries[k]).has(pid)).sort()}
 
 /* ---------- calendar ---------- */
@@ -588,172 +519,75 @@ function renderCal(){
   let h=WD.map(w=>`<div class="wd">${w}</div>`).join('');
   for(let i=0;i<first.getDay();i++)h+='<div></div>';
   for(let d=1;d<=days;d++){
-    const k=`${y}-${pad(mo)}-${pad(d)}`;
-    const ti=trialInfo(k);const cls=['day',entries[k]?'rec':'',k===todayKey?'today':'',k===cur?'sel':'',ti&&ti.purge?'purge':''].join(' ');
-    h+=`<button class="${cls}" data-k="${k}" ${k>todayKey||k<RECORD_START?'disabled':''} aria-label="${mo}월 ${d}일${entries[k]?', 기록 있음':''}${ti&&ti.purge?', 모공비움':''}"><span class="n">${d}</span><span class="mk"></span></button>`;
+    const k=`${y}-${pad(mo)}-${pad(d)}`,x=entries[k],memo=hasNote(x);
+    const ti=trialInfo(k),per=k<=todayKey&&cycleInfo(k).code==='on';const cls=['day',x?'rec':'',memo?'memo':'',per?'period':'',k===todayKey?'today':'',k===cur?'sel':'',ti&&ti.purge?'purge':''].join(' ');
+    h+=`<button class="${cls}" data-k="${k}" ${k>todayKey||k<RECORD_START?'disabled':''} aria-label="${mo}월 ${d}일${memo?', 메모 있음':''}${ti&&ti.purge?', 모공비움':''}${per?', 생리':''}"><span class="n">${d}</span><span class="mk"></span><span class="pk"></span></button>`;
   }
   $('cal').innerHTML=h;
   $('cal').querySelectorAll('button.day').forEach(b=>b.onclick=()=>selectDay(b.dataset.k));
-  const lg=PLAN.trial?'<span><i class="bar"></i>모공비움 주</span>':'';
-  $('legend').innerHTML=lg;
+  $('legend').innerHTML=(PLAN.trial?'<span><i class="bar"></i>모공비움 주</span>':'')+'<span><i class="pbar"></i>생리</span><span><i class="memodot"></i>메모한 날</span>';
+}
+function selectDay(k){if(k<RECORD_START||k>todayKey)return;if(saveTimer)flushSave();cur=k;pickOpen=false;e=drafts[k]||savedOf(k);viewMonth=k.slice(0,7);renderLog()}
+$('prevM').onclick=()=>{const[y,m]=viewMonth.split('-').map(Number);const v=key(new Date(y,m-2,1)).slice(0,7);if(v<MIN_MONTH)return;viewMonth=v;renderCal()};
+$('nextM').onclick=()=>{const[y,m]=viewMonth.split('-').map(Number);viewMonth=key(new Date(y,m,1)).slice(0,7);renderCal()};
 
+/* ---------- memo + products ---------- */
+let pickOpen=false,pickAll=false;
+function renderMemo(){
+  $('memo').value=e.memo;
+  $('memoProds').innerHTML=e.prods.map(id=>{const p=prod(id);return `<span class="pchip">${esc(p?p.name:'삭제된 제품')}<button data-rm="${id}" aria-label="빼기">×</button></span>`}).join('');
+  $('memoProds').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{e.prods=e.prods.filter(i=>i!==b.dataset.rm);touched();renderMemo()});
+  $('prodPickBtn').textContent=pickOpen?'닫기':'제품 선택';
+  $('prodPickBtn').setAttribute('aria-expanded',pickOpen);
+  const pk=$('prodPicker');pk.hidden=!pickOpen;if(!pickOpen)return;
+  const all=inventory.filter(p=>p.status!=='done');
+  const avail=pickAll?all:all.filter(p=>p.status==='using'||e.prods.includes(p.id));
+  const hiddenN=all.length-avail.length;
+  let h='';
+  STEPS.forEach(([k,l])=>{const ps=avail.filter(p=>p.cat===k);if(!ps.length)return;
+    h+=`<div class="grp">${l}</div><div class="chips">${ps.map(p=>`<button class="chip" data-p="${p.id}" aria-pressed="${e.prods.includes(p.id)}">${esc(p.name)}</button>`).join('')}</div>`});
+  if(!h)h='<p class="empty" style="font-size:14px">등록된 제품이 없어요.</p>';
+  if(hiddenN>0||pickAll)h+=`<button class="linkbtn" data-all style="margin-top:12px;color:var(--soft)">${pickAll?'사용 중인 제품만 보기':`보관 중인 제품도 보기 (${hiddenN})`}</button>`;
+  h+='<button class="linkbtn" data-new style="margin-top:8px;display:block">새 제품 등록</button>';
+  pk.innerHTML=h;
+  pk.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const id=b.dataset.p;e.prods.includes(id)?e.prods=e.prods.filter(i=>i!==id):e.prods.push(id);touched();renderMemo()});
+  const ab=pk.querySelector('[data-all]');if(ab)ab.onclick=()=>{pickAll=!pickAll;renderMemo()};
+  pk.querySelector('[data-new]').onclick=()=>{switchTab('inv');openForm(null)};
 }
-function poreUses(E=entries){return Object.keys(E).filter(k=>[...usedIds(E[k])].some(id=>isPoreRaw(prod(id)))).sort()}
-function selectDay(k){if(k<RECORD_START)return;if(k>todayKey)return;if(saveTimer)flushSave();cur=k;editMode={am:false,pm:false};e=drafts[k]||savedOf(k);viewMonth=k.slice(0,7);renderLog()}
-$('prevM').onclick=()=>{const[y,m]=viewMonth.split('-').map(Number);const d=new Date(y,m-2,1);const v=key(d).slice(0,7);if(v<MIN_MONTH)return;viewMonth=v;renderCal()};
-$('nextM').onclick=()=>{const[y,m]=viewMonth.split('-').map(Number);const d=new Date(y,m,1);viewMonth=key(d).slice(0,7);renderCal()};
+$('memo').oninput=ev=>{e.memo=ev.target.value;touched()};
+$('prodPickBtn').onclick=()=>{pickOpen=!pickOpen;renderMemo()};
 
-/* ---------- routine steps ---------- */
-let openPicker=null, pickAll={}, editMode={am:false,pm:false};
-function renderRoutine(t){
-  const el=$(t+'Steps');el.innerHTML='';
-  STEPS.forEach(([k,label])=>{
-    const s=e[t][k];const pid=t+'-'+k;
-    const div=document.createElement('div');div.className='step';
-    const chips=s.ids.map(id=>{const p=prod(id);return `<span class="pchip">${esc(p?p.name:'삭제된 제품')}<button data-rm="${id}" aria-label="빼기">×</button></span>`}).join('');
-    div.innerHTML=`<div class="stephead"><b>${k==='serum'?'세럼':label}</b><button class="linkbtn" aria-expanded="${openPicker===pid}">${openPicker===pid?'닫기':'제품 선택'}</button></div><div class="selected">${chips}</div>`;
-    div.querySelector('.linkbtn').onclick=()=>{openPicker=openPicker===pid?null:pid;renderCard('am');renderCard('pm')};
-    div.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{s.ids=s.ids.filter(i=>i!==b.dataset.rm);touched();renderCard(t)});
-    if(openPicker===pid){
-      const pk=document.createElement('div');pk.className='picker';
-      const all=inventory.filter(p=>p.status!=='done');
-      const avail=pickAll[pid]?all:all.filter(p=>p.status==='using'||s.ids.includes(p.id));
-      const hiddenN=all.length-avail.length;
-      const mine=avail.filter(p=>p.cat===k||s.ids.includes(p.id)),other=[];
-      let ph='';
-      if(!mine.length)ph+=`<p class="empty" style="font-size:14px">${label} 제품이 없어요.</p>`;
-      else ph+=`<div class="chips">${mine.map(p=>`<button class="chip" data-p="${p.id}" aria-pressed="${s.ids.includes(p.id)}">${esc(p.name)}</button>`).join('')}</div>`;
-      if(other.length)ph+=`<div class="grp">다른 단계 제품</div><div class="chips">${other.map(p=>`<button class="chip" data-p="${p.id}" aria-pressed="${s.ids.includes(p.id)}">${esc(p.name)}</button>`).join('')}</div>`;
-      if(hiddenN>0||pickAll[pid])ph+=`<button class="linkbtn" data-all style="margin-top:8px;color:var(--soft)">${pickAll[pid]?'사용 중인 제품만 보기':`보관 중인 제품도 보기 (${hiddenN})`}</button>`;
-      ph+=`<div class="stepnote"><div class="grp">방법 메모</div><input type="text" placeholder="예: T존만, 두 번 레이어링" value="${esc(s.note)}"></div>`;
-      ph+=`<button class="linkbtn" data-new style="margin-top:6px">새 ${label} 제품 등록</button>`;
-      pk.innerHTML=ph;
-      pk.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const id=b.dataset.p;s.ids.includes(id)?s.ids=s.ids.filter(i=>i!==id):s.ids.push(id);touched();renderCard(t)});
-      pk.querySelector('input').oninput=ev=>{s.note=ev.target.value;touched()};
-      const ab=pk.querySelector('[data-all]');if(ab)ab.onclick=()=>{pickAll[pid]=!pickAll[pid];renderCard(t)};
-      pk.querySelector('[data-new]').onclick=()=>{switchTab('inv');openForm(null,k)};
-      div.appendChild(pk);
-    }else if(s.note){div.insertAdjacentHTML('beforeend',`<p class="hint" style="margin-top:4px">${esc(s.note)}</p>`)}
-    el.appendChild(div);
-  });
-}
-const PLAN_IDS=['s-sebgel','s-sesu','s-serum1','s-pore1','s-poremix','s-aqcream','s-biore'];
-const live=id=>{const p=prod(id);return p&&p.status!=='done'};
-function planFor(k,t){
-  const ti=trialInfo(k);if(!ti)return null;
-  const base=(ti.round===1&&ti.purge)?'s-serum1':'s-poremix';
-  let r;
-  if(t==='am')r={cleansing:['s-sebgel'],serum:[base],cream:['s-aqcream'],makeup:['s-biore']};
-  else{const used=poreUses(entries).some(d=>d!==k&&d>=ti.phaseStart&&d<=ti.phaseEnd);
-    r={cleansing:['s-sesu'],serum:[base,...(ti.purge&&!used?['s-pore1']:[])],cream:['s-aqcream']}}
-  Object.keys(r).forEach(st=>{r[st]=r[st].filter(live);if(!r[st].length)delete r[st]});
-  return r;
-}
-const sameSet=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
-function routineState(t){
-  const pl=planFor(cur,t)||{},has=STEPS.some(([k])=>e[t][k].ids.length);
-  const match=has&&STEPS.every(([k])=>k==='spot'||sameSet(e[t][k].ids,pl[k]||[]));
-  return{pl,has,match};
-}
-function stepLabel(k,ids){return k==='makeup'&&ids.length&&ids.every(i=>i==='s-biore')?'선크림':k==='serum'?'세럼':catName(k)}
-function nameOf(id){const p=prod(id);if(!p)return '삭제된 제품';if(isPoreRaw(p))return '모공원액';if(id==='s-poremix')return '모공믹스';
-  return p.name.replace(/^(심플리웍스|바이오더마|디오디너리|에쿠와 카밍|에쿠와|바이옴액티베이트|더마팩토리|폴라초이스|아누아|피몽쉐|연작)\s*/,'').replace(/^비오레 UV 아쿠아리치 /,'비오레 ').replace(/\s*\(.*\)$/,'')}
-function renderCard(t){
-  const el=$(t+'Card'),ed=$(t+'Steps'),{pl,has,match}=routineState(t);
-  if(editMode[t]){
-    el.innerHTML=`<div class="edhead"><span>직접 고르기</span><span class="edlinks"><button class="txtbtn" data-fill>계획대로 채우기</button><button class="txtbtn" data-clear>비우기</button></span></div>`;
-    el.querySelector('[data-fill]').onclick=()=>{fillPlan(t);renderCard(t)};
-    el.querySelector('[data-clear]').onclick=()=>{STEPS.forEach(([k])=>e[t][k].ids=[]);touched();renderCard(t)};
-    renderRoutine(t);
-    ed.insertAdjacentHTML('beforeend','<button class="primary full" data-done>완료</button>');
-    ed.querySelector('[data-done]').onclick=()=>{editMode[t]=false;openPicker=null;renderCard(t)};
-    el.className='rcard editing';return;
-  }
-  ed.innerHTML='';el.className='rcard';
-  const src=has?Object.fromEntries(STEPS.map(([k])=>[k,e[t][k].ids])):pl;
-  const rows=STEPS.filter(([k])=>(src[k]||[]).length).map(([k])=>`<div class="srow"><span>${stepLabel(k,src[k])}</span><span>${src[k].map(i=>esc(nameOf(i))).join(', ')}${e[t][k].note&&has?`<small>${esc(e[t][k].note)}</small>`:''}</span></div>`).join('');
-  const right=match?'<span class="did"><i>✓</i>했어요</span>':has?'<span class="meta">계획과 달라요</span>':'';
-  let foot;
-  if(!has)foot=`<div class="btnrow"><button class="primary" data-plan>계획대로 했어요</button><button class="secondary" data-edit>바꾸기</button></div>`;
-  else foot=`<div class="linkrow"><button class="txtbtn" data-edit>바꾸기</button><button class="txtbtn soft" data-spot>스팟 추가</button></div>`;
-  el.innerHTML=`<div class="chead"><span class="t">${match||!has?'계획한 루틴':'기록한 루틴'}</span>${right}</div><div class="srows">${rows||'<p class="empty small">계획된 루틴이 없어요. 바꾸기로 직접 골라주세요.</p>'}</div>${foot}`;
-  const pb=el.querySelector('[data-plan]');if(pb)pb.onclick=()=>{fillPlan(t);renderCard(t)};
-  el.querySelector('[data-edit]').onclick=()=>{if(!has)fillPlan(t);editMode[t]=true;openPicker=null;renderCard(t)};
-  const sb=el.querySelector('[data-spot]');if(sb)sb.onclick=()=>{editMode[t]=true;openPicker=t+'-spot';renderCard(t)};
-}
-function fillPlan(t){const pl=planFor(cur,t)||{};STEPS.forEach(([k])=>{if(k!=='spot')e[t][k].ids=[...(pl[k]||[])]});touched()}
-
-/* ---------- skin + life ---------- */
-function chipGroup(el,items,isSel,onTap,cls){
-  el.innerHTML='';
-  items.forEach(it=>{const[v,l]=Array.isArray(it)?it:[it,it];const b=document.createElement('button');b.className='chip'+(cls?' '+cls:'');b.textContent=l;b.setAttribute('aria-pressed',isSel(v)?'true':'false');b.onclick=()=>onTap(v);el.appendChild(b)});
-}
-const toggleIn=(a,v)=>{const i=a.indexOf(v);i<0?a.push(v):a.splice(i,1)};
-function scale(el,f){el.innerHTML='';for(let i=1;i<=5;i++){const b=document.createElement('button');b.textContent=i;b.setAttribute('aria-pressed',e[f]===i?'true':'false');b.onclick=()=>{e[f]=e[f]===i?0:i;touched();renderSkin()};el.appendChild(b)}}
-function normalizeChain(E){
-  let c=zeroZ();const sum=o=>o?Object.values(o).reduce((a,b)=>a+(b||0),0):0;
-  Object.keys(E).sort().forEach(k=>{const x=E[k],t0=x.troubles||zeroZ(),n={},h={},t={};
-    ZONES.forEach(({k:z})=>{let nn,hh;
-      if(x.healT){nn=(x.newT||{})[z]||0;hh=x.healT[z]||0}
-      else if(sum(t0)===0&&sum(x.newT)===0){nn=0;hh=0}
-      else if(x.newT){nn=x.newT[z]||0;hh=Math.max(0,(c[z]||0)+nn-(t0[z]||0))}
-      else{nn=Math.max(0,(t0[z]||0)-(c[z]||0));hh=Math.max(0,(c[z]||0)-(t0[z]||0))}
-      hh=Math.min(hh,(c[z]||0)+nn);n[z]=nn;h[z]=hh;t[z]=(c[z]||0)+nn-hh});
-    x.newT=n;x.healT=h;x.troubles=t;c=t});
-}
+/* ---------- period ---------- */
 function renderCycle(){
   const ci=cycleInfo(cur);
   $('cycleLabel').innerHTML=ci.l1?`<span>${esc(ci.l1)}</span>${ci.l2?`<b>${esc(ci.l2)}</b>`:''}`:'<span>기록된 생리 시작일이 없어요</span>';
-  const w=cur===todayKey?'오늘':mdS(cur);
-  const isStart=periods.find(q=>q.start===cur);const open=[...periods].sort((a,b)=>a.start<b.start?-1:1).reverse().find(q=>q.start<=cur&&!q.end&&diff(q.start,cur)<=12&&!periods.some(r=>r.start>q.start&&r.start<=cur));
-  const btn=$('cycleBtn');
-  if(isStart){btn.textContent='시작일 취소';btn.onclick=()=>{periods=periods.filter(q=>q.start!==cur);persistProfile()}}
-  else if(open&&cur>open.start){btn.textContent=`${w} 생리 끝`;btn.onclick=()=>{open.end=cur;persistProfile()}}
-  else{btn.textContent=`${w} 생리 시작`;btn.onclick=()=>{periods.push({start:cur,end:null});periods.sort((a,b)=>a.start<b.start?-1:1);persistProfile()}}
+  const w=cur===todayKey?'오늘':mdS(cur),ps=[...periods].sort((a,b)=>a.start<b.start?-1:1);
+  const isStart=ps.find(q=>q.start===cur),isEnd=ps.find(q=>q.end===cur);
+  // 고른 날 이전의 가장 가까운 시작일. 2주 안이면 그날을 끝으로 기록할 수 있다
+  const last=[...ps].reverse().find(q=>q.start<cur),inRange=last&&(last.end?cur<=last.end:diff(last.start,cur)<=9);
+  const sb=$('cyStart'),eb=$('cyEnd');
+  if(isStart){sb.textContent='시작일 취소';sb.onclick=()=>{periods=periods.filter(q=>q.start!==cur);persistProfile()}}
+  else{sb.textContent=`${w} 생리 시작`;sb.onclick=()=>{periods.push({start:cur,end:null});persistProfile()}}
+  sb.hidden=!isStart&&!!inRange;
+  if(isEnd){eb.textContent='종료일 취소';eb.onclick=()=>{isEnd.end=null;persistProfile()};eb.hidden=false}
+  else{eb.textContent=`${w} 생리 끝`;eb.onclick=()=>{last.end=cur;persistProfile()};eb.hidden=isStart||!last||diff(last.start,cur)>14}
 }
-async function persistProfile(){lsSave();renderLog();renderFlow();if(dbProfile){try{await dbProfile.set({inventory,seeded,periods})}catch(err){syncErr(err)}}}
-function zoneState(){
-  const c=carryOf(cur),r={};
-  ZONES.forEach(({k})=>{const n=(e.newT||{})[k]||0,h=Math.min((e.healT||{})[k]||0,(c[k]||0)+n);r[k]={c:c[k]||0,n,h}});
-  return r;
-}
-function setZone(k,dn,dh){
-  const st=zoneState();if(!e.newT)e.newT={};if(!e.healT)e.healT={};
-  ZONES.forEach(z=>{e.newT[z.k]=st[z.k].n;e.healT[z.k]=st[z.k].h});
-  const x=st[k];let n=Math.max(0,x.n+dn),h=Math.max(0,x.h+dh);h=Math.min(h,x.c+n);
-  e.newT[k]=n;e.healT[k]=h;e.troubles[k]=x.c+n-h;touched();renderSkin();
-}
-function renderSkin(){
-  const zr=$('zoneRows');zr.innerHTML='';const st=zoneState();ZONES.forEach(({k})=>e.troubles[k]=st[k].c+st[k].n-st[k].h);
-  ZONES.forEach(z=>{const x=st[z.k];const row=document.createElement('div');row.className='zrow4';
-    row.innerHTML=`<span>${z.n}</span><span class="stepper"><button aria-label="${z.n} 새로 남 빼기">−</button><span class="nwv ${x.n?'on':''}">${x.n}</span><button aria-label="${z.n} 새로 남 더하기">+</button></span><span class="stepper"><button aria-label="${z.n} 가라앉음 빼기">−</button><span class="nwv ${x.h?'on':''}">${x.h}</span><button aria-label="${z.n} 가라앉음 더하기">+</button></span><b class="znow ${e.troubles[z.k]?'on':''}">${e.troubles[z.k]}</b>`;
-    const bs=row.querySelectorAll('button');
-    bs[0].onclick=()=>setZone(z.k,-1,0);bs[1].onclick=()=>setZone(z.k,1,0);bs[2].onclick=()=>setZone(z.k,0,-1);bs[3].onclick=()=>setZone(z.k,0,1);
-    zr.appendChild(row)});
-  $('faceTotal').textContent=total(e)+'개';
-  chipGroup($('ttypes'),TTYPES,v=>e.ttypes.includes(v),v=>{toggleIn(e.ttypes,v);touched();renderSkin()},'spot');
-  scale($('oil'),'oil');scale($('dry'),'dry');
-  chipGroup($('irr'),IRR,v=>v==='없음'?!e.irr.length:e.irr.includes(v),v=>{v==='없음'?e.irr=[]:toggleIn(e.irr,v);touched();renderSkin()});
-  renderCycle();
-  chipGroup($('food'),FOOD,v=>e.food.includes(v),v=>{toggleIn(e.food,v);touched();renderSkin()});
-}
-$('memo').oninput=ev=>{e.memo=ev.target.value;touched()};
+function persistProfile(){lsSave();renderLog()}
 
 function renderLog(){
   const d=parse(cur);
   $('dayTitle').textContent=`${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`;
   const ti=trialInfo(cur),b=$('trialBadge');b.hidden=!ti;
   if(ti){b.className='pill '+(ti.purge?'purge':'keep');b.innerHTML=`<small>${ti.round}번째</small>${ti.phase} ${ti.week}주차 · ${ti.dayInWeek}일째`}
-  renderCal();renderCard('am');renderCard('pm');renderSkin();$('memo').value=e.memo;updateDayState();
+  renderCal();renderMemo();renderCycle();updateDayState();
 }
 
-/* ---------- save ---------- */
+/* ---------- delete day ---------- */
 let delArm=false;
-$('delDay').onclick=async()=>{
+$('delDay').onclick=()=>{
   if(!delArm){delArm=true;$('delDay').textContent='한 번 더 누르면 지워져요';setTimeout(()=>{delArm=false;$('delDay').textContent='이 날 기록 지우기'},3000);return}
   delArm=false;$('delDay').textContent='이 날 기록 지우기';
-  clearTimeout(saveTimer);saveTimer=null;const k=cur;delete entries[k];delete drafts[k];normalizeChain(entries);lsSave();e=baseOf(k);renderLog();renderFlow();
-  if(dbDays){try{await dbDays.doc(k).delete()}catch(err){}}
+  clearTimeout(saveTimer);saveTimer=null;const k=cur;delete entries[k];delete drafts[k];lsSave();e=blank(k);renderLog();
 };
 
 /* ---------- inventory ---------- */
@@ -786,7 +620,7 @@ $('fDel').onclick=()=>{
   delP=false;$('fDel').textContent='삭제';
   inventory=inventory.filter(p=>p.id!==editing);$('formBlock').hidden=true;persistInv();
 };
-async function persistInv(){lsSave();renderInv();renderLog();renderFlow();if(dbProfile){try{await dbProfile.set({inventory,seeded,periods})}catch(err){$('storeNote').textContent='제품 목록을 계정에 저장하지 못했어요. 이 기기에는 남아 있어요.'}}}
+function persistInv(){lsSave();renderInv();renderLog()}
 function missingSeeds(){const ids=new Set(inventory.map(p=>p.id)),names=new Set(inventory.map(p=>p.name));return SEED.filter(x=>!ids.has(x[0])&&!names.has(x[1]))}
 $('seedBtn').onclick=()=>{const m=missingSeeds();m.forEach(([id,name,cat,ing,cycle,status,note],i)=>inventory.push({id,name,cat,ing,cycle,status,note,created:Date.now()+i}));persistInv()};
 function renderInv(){
@@ -811,163 +645,17 @@ function renderInv(){
   $('invList').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openForm(b.dataset.edit));
 }
 
-/* ---------- flow ---------- */
-const total=x=>Object.values(x.troubles||{}).reduce((a,b)=>a+b,0);
-function newOf(x,E=entries){if(x.newT)return x.newT;const c=carryOf(x.date,E),r={};ZONES.forEach(z=>r[z.k]=Math.max(0,(x.troubles[z.k]||0)-(c[z.k]||0)));return r}
-const totalNew=(x,E)=>Object.values(newOf(x,E)).reduce((a,b)=>a+b,0);
-function phaseOf(k){const ti=trialInfo(k);return ti?(ti.purge?'purge':'keep'):null}
-function renderStatus(E,T){
-  const ti=trialInfo(T);$('statusBlock').hidden=!ti;if(!ti)return;
-  const t=PLAN.trial,u=poreUses(E),usedWk=u.find(x=>x>=ti.phaseStart&&x<=ti.phaseEnd);
-  $('statusEyebrow').textContent=`${t.name} ${ti.round}번째`;
-  $('statusTitle').textContent=`${ti.phase} ${ti.week}주차`;
-  $('statusNote').textContent=ti.purge
-    ?(usedWk?`${mdS(usedWk)}에 모공원액을 썼어요. 트러블이 잠깐 늘어도 퍼징일 수 있어요. ${mdS(addDays(ti.phaseEnd,1))}부터 유지기간이에요.`:`이번 주 저녁에 모공원액을 한 번 써요. ${mdS(addDays(ti.phaseEnd,1))}부터 유지기간이에요.`)
-    :`다음 모공비움은 ${mdS(ti.nextPurge)}부터예요.`;
-  const first=Object.keys(E).sort()[0];
-  const recs=Object.values(E).filter(x=>x.date>=t.start&&x.date<=T&&x.date!==first);
-  const cell=(ph,lbl)=>{const a=recs.filter(x=>phaseOf(x.date)===ph).map(x=>totalNew(x,E)),now=(ph==='purge')===ti.purge;
-    const num=a.length?`+${(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1)}<small>개</small>`:'<span class="na">–</span>';
-    const det=a.length?'':(ph==='keep'?`${mdS(addDays(t.start,7+(t.extra||0)))}부터 집계`:'첫날은 빼고 집계');
-    return `<div class="phasecell ${now?'now':''}"><span class="lbl">${lbl} 하루 평균</span><span class="num">${num}</span>${det?`<span class="det">${det}</span>`:''}</div>`};
-  $('phaseStats').innerHTML=cell('purge','모공비움 기간')+cell('keep','유지기간');
-}
-let selDay=null;
-function alertsOf(k,E){const x=E[k];if(!x)return[];const first=Object.keys(E).sort()[0],n=newOf(x,E);
-  return ZONES.filter(z=>(n[z.k]||0)>=(z.k==='chin'?2:1)&&!(z.k==='chin'&&k===first)).map(z=>[z,n[z.k]])}
-function renderTimeline(rs,E,T){
-  const end=[T,addDays(rs,13)].sort()[1];
-  const days=[];for(let k=rs;k<=end;k=addDays(k,1))days.push(k);
-  const n=days.length,cols=`grid-template-columns:repeat(${n},minmax(0,1fr))`,showNum=n<=16;
-  const act=days.map(k=>E[k]?total(E[k]):null),nw=days.map(k=>E[k]?totalNew(E[k],E):0);
-  const al=days.map(k=>alertsOf(k,E).length>0);
-  const max=Math.max(4,...act.filter(v=>v!==null)),H=96;
-  if(!selDay||!E[selDay]||selDay<rs||selDay>end){selDay=[...days].reverse().find((k,i)=>al[n-1-i])||[...days].reverse().find(k=>E[k])||null}
-  let h='<div class="tl">';
-  h+='<div class="rl">단계</div><div class="cells" style="'+cols+'">';
-  let i=0;while(i<n){const ph=phaseOf(days[i]);let j=i;while(j<n&&phaseOf(days[j])===ph)j++;
-    const span=j-i,lbl=ph==='purge'?'모공비움':'유지기간';
-    h+=ph?`<div class="ph ${ph}" style="grid-column:span ${span}">${span>=4?lbl:''}</div>`:`<div style="grid-column:span ${span}"></div>`;i=j}
-  h+='</div>';
-  {const P=DEMO_ON?DEMO.periods:periods;const cs=days.map(k=>cycleInfo(k,P));
-  h+='<div class="rl">생리 주기</div><div class="cells" style="'+cols+'">';
-  let a=0;while(a<n){const key=c=>c.code||(c.short?'tent':'');const kk=key(cs[a]);let b=a;while(b<n&&key(cs[b])===kk)b++;
-    const sp=b-a,c=cs[a],txt=kk==='on'?'생리':kk==='w1'?'1주 전':kk==='w2'?'배란기':kk==='w3'?'3주 전':kk==='w4'?'4주+ 전':kk==='tent'?'예정일 지남':'';
-    h+=kk?`<div class="cy ${kk}" style="grid-column:span ${sp}" title="${esc(c.label)}">${sp>=3?txt:''}</div>`:`<div style="grid-column:span ${sp}"></div>`;a=b}
-  h+='</div>';}
-  h+='<div class="rl"></div><div class="cells bars" style="'+cols+'">';
-  days.forEach((k,i)=>{const v=act[i];if(v===null){h+='<div class="barcell"></div>';return}
-    const nv=Math.min(nw[i],v),oh=(v-nv)/max*H,nh=nv/max*H;
-    h+=`<button class="barcell ${k===selDay?'sel':''}" data-k="${k}" aria-label="${md(k)} 트러블 ${v}개, 새로 ${nv}개${al[i]?', 평소와 다름':''}">${al[i]?'<em class="al"></em>':''}${showNum?`<span>${v}</span>`:''}${nv?`<i class="nw ${v===nv?'top':''}" style="height:${Math.max(3,nh)}px"></i>`:''}${v>nv?`<i class="old" style="height:${Math.max(3,oh)}px"></i>`:''}${v===0?'<i class="zero"></i>':''}</button>`});
-  h+='</div>';
-  h+='<div class="rl"></div><div class="cells" style="'+cols+'">';
-  days.forEach((k,i)=>{const d=parse(k);h+=`<div class="axis">${i===0||i%(n>16?7:2)===0?`${d.getMonth()+1}/${d.getDate()}`:''}</div>`});
-  h+='</div>';
-  const cnt={};days.forEach(k=>{if(E[k])usedIds(E[k]).forEach(id=>{const p=prod(id);if(p&&(isPoreRaw(p)||!PLAN_IDS.includes(id)))cnt[id]=(cnt[id]||0)+1})});
-  const ids=Object.keys(cnt).sort((a,b)=>(isPoreRaw(prod(b))?1:0)-(isPoreRaw(prod(a))?1:0)||cnt[b]-cnt[a]).slice(0,5);
-  ids.forEach(id=>{const p=prod(id),pore=isPoreRaw(p);const short=pore?'모공원액':SHORT[id]||nameOf(id);
-    const u=days.map(k=>!!(E[k]&&usedIds(E[k]).has(id)));
-    h+=`<div class="rl ${pore?'pore':''}" title="${esc(p.name)}">${esc(short)}</div><div class="cells" style="${cols}">`;
-    u.forEach((on,i)=>{h+=`<div class="dot ${pore?'pore':''}">${on?'<i></i>':''}</div>`});
-    h+='</div>'});
-  h+='</div>';
-  $('timeline').innerHTML=h;
-  $('timeline').querySelectorAll('button.barcell').forEach(b=>b.onclick=()=>{selDay=b.dataset.k;renderTimeline(rs,E,T)});
-  renderDetail(E);
-  $('tlLegend').innerHTML='<span><i style="background:var(--r)"></i>새로 남</span><span><i style="background:var(--r-mid)"></i>이어진 트러블</span><span><em class="al"></em>평소와 다른 날</span><span><i style="background:var(--lx)"></i>모공비움</span><span><i style="background:var(--lx-weak)"></i>유지기간</span><span><i style="background:var(--cy-w2)"></i>배란기</span><span><i style="background:var(--cy-w1)"></i>생리 1주 전</span><span><i style="background:var(--cy-on)"></i>생리 중</span>';
-}
-function renderDetail(E){
-  const el=$('dayDetail');if(!selDay||!E[selDay]){el.hidden=true;return}el.hidden=false;
-  const x=E[selDay],al=alertsOf(selDay,E),nn=totalNew(x,E);
-  const head=al.length?al.map(([z,c])=>`${z.n} <b>${c}개</b>`).join(', ')+' 새로 남':nn?`새로 <b>${nn}개</b> 남`:'새로 난 트러블 없음';
-  const why=al.length?(al.some(([z])=>z.k!=='chin')?'평소 안 나는 자리예요':'턱에 하루 2개 이상 났어요'):`얼굴에 있는 트러블 ${total(x)}개`;
-  el.innerHTML=`<div class="dh">${mdS(selDay)}(${WD[parse(selDay).getDay()]}) · ${head}</div><div class="ds">${why}</div><div class="tags">${ctxChips(selDay,E).map(([t,hl])=>`<span class="${hl?'k':''}">${esc(t)}</span>`).join('')}</div>`;
-}
-function ctxChips(k,E){
-  const x=E[k],y=E[addDays(k,-1)],c=[];
-  const ci=cycleInfo(k,E===entries?periods:DEMO.periods);if(ci.label)c.push([ci.final?ci.label.replace(/ · \d+일째/,''):ci.short||'생리 전(미확정)',ci.hl]);
-  if(x&&x.food.includes('음주'))c.push(['음주',1]);else if(y&&y.food.includes('음주'))c.push(['전날 음주',1]);
-  const fs=[...new Set([...(x?x.food:[]),...(y?y.food:[])])].filter(f=>f!=='음주');fs.forEach(f=>c.push([f,0]));
-  const pu=poreUses(E).filter(d=>d<=k&&diff(d,k)<=6).pop();if(pu)c.push([diff(pu,k)?`모공원액 ${diff(pu,k)}일 후`:'모공원액 쓴 날',1]);
-  if(k>addDays(RECORD_START,2)&&x){[...usedIds(x)].forEach(id=>{const prev=Object.keys(E).filter(d=>d<k&&diff(d,k)<=7&&usedIds(E[d]).has(id));if(!prev.length&&prod(id)&&!isPoreRaw(prod(id)))c.push([`새로 쓴 제품: ${SHORT[id]||nameOf(id)}`,1])})}
-  const ti=trialInfo(k);if(ti)c.push([`${ti.phase} ${ti.week}주차`,0]);
-  return c;
-}
-function renderFlow(){
-  const E=DEMO_ON?DEMO.entries:entries,T=DEMO_ON?DEMO.today:todayKey;
-  $('demoBtn').textContent=DEMO_ON?'내 기록 보기':'예시 데이터로 미리 보기';
-  $('demoMsg').textContent=DEMO_ON?`예시 데이터 · 오늘을 ${mdS(T)}로 가정`:'';
-  $('demoMsg').parentElement.classList.toggle('on',DEMO_ON);
-  renderStatus(E,T);
-  const rs=[RECORD_START,addDays(T,-29)].sort()[1];
-  document.querySelectorAll('.rangeSub').forEach(el=>el.textContent=rs===RECORD_START?`${md(RECORD_START)} 기록 시작부터`:`최근 30일`);
-  renderTimeline(rs,E,T);
-  const days=[];for(let k=rs;k<=T;k=addDays(k,1))days.push(k);
-  // factors
-  const F=[...FOOD.map(f=>[f,x=>x.food.includes(f)]),...CYC_CODES.map(([v,l])=>[l,x=>cycleInfo(x.date,DEMO_ON?DEMO.periods:periods).code===v]),
-    ...(DEMO_ON?SEED.map(r=>seedProd(r[0])):inventory).filter(p=>!PLAN_IDS.includes(p.id)).map(p=>[nameOf(p.id)+' 쓴 날',x=>usedIds(x).has(p.id),p.cat==='spot'])];
-  const list=Object.values(E).sort((a,b)=>a.date<b.date?-1:1);
-  const pairs=list.map(x=>{const n=E[addDays(x.date,1)];return n?[x,totalNew(n,E)]:null}).filter(Boolean);
-  const av=a=>a.reduce((s,v)=>s+v,0)/a.length;
-  const rows=F.map(([name,fn,spot])=>{const y=pairs.filter(p=>fn(p[0])).map(p=>p[1]),n=pairs.filter(p=>!fn(p[0])).map(p=>p[1]);return{name,spot,ny:y.length,nn:n.length,ay:y.length?av(y):0,an:n.length?av(n):0,d:y.length&&n.length?av(y)-av(n):0}});
-  const ok=rows.filter(r=>r.ny>=3&&r.nn>=3).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,8);const maxd=Math.max(1,...ok.map(r=>Math.abs(r.d)));
-  let fh=ok.map(r=>{const up=r.d>0.05,dn=r.d<-0.05,w=Math.abs(r.d)/maxd*50;
-    return `<div class="factor"><div class="top"><span>${esc(r.name)}</span><span class="d ${up?'up':dn?'down':''}">${r.d>0?'+':''}${r.d.toFixed(1)}개</span></div><div class="meta">다음 날 새로 ${r.ay.toFixed(1)}개 · 평소 ${r.an.toFixed(1)}개 · ${r.ny}일 기록${r.spot?'<br>트러블이 난 날 바르는 제품이라 높게 나오기 쉬워요':''}</div><div class="track"><i style="left:${up?50:50-w}%;width:${w}%;background:${up?'var(--r)':'var(--ink)'}"></i><i style="left:50%;width:1px;background:var(--soft)"></i></div></div>`}).join('');
-  if(!ok.length)fh='<p class="empty">아직 비교할 만큼 쌓이지 않았어요. 요인이 있던 날과 없던 날이 각각 3일 이상 쌓이면 보여요.</p>';
-  $('factors').innerHTML=fh;
-}
-
-const SHORT={'s-sebgel':'세비엄 젤','s-sesu':'세수한번','s-biore':'비오레','s-aqserum':'아줄렌 세럼','s-aqcream':'아줄렌 크림','s-azelia':'아젤리아','s-sulfur':'설퍼','s-rice':'라이스 리피즈','s-serum1':'세럼한번','s-poremix':'모공믹스','s-calamine':'칼라민','s-anua':'아누아','s-panth':'판테놀','s-atoderm':'아토덤','s-pcbha':'바하 토너','s-toglyc':'글리콜릭','s-aqtoner':'에쿠와 토너','s-pimong':'비비','s-porere':'포어 리파이너','s-yunjac':'베이스프렙'};
-/* ---------- demo ---------- */
-const DEMO=(()=>{
-  const E={},start='2026-09-26';
-  const chinNow=[3,3,4,5,4,4,3,3,2,2,2,1,1,1],chinNew=[3,0,1,2,0,1,0,1,0,0,1,0,0,0];
-  const noseNow=[0,0,0,0,0,1,1,1,0,0,0,0,0,0],noseNew=[0,0,0,0,0,1,0,0,0,0,0,0,0,0];
-  const foods=[['당','밀가루','기름진 음식'],[],['당'],[],['음주'],[],['야식'],[],['밀가루'],[],[],['당'],[],[]];
-  const cyc=['w2','w2','w2','w1','w1','w1','w1','w1','w1','on','on','on','on','on'];
-  chinNow.forEach((v,i)=>{const k=addDays(start,i),x=blank(k),wk1=i<7;
-    x.troubles={chin:v,nose:noseNow[i],forehead:0,cheek:0};x.newT={chin:chinNew[i],nose:noseNew[i],forehead:0,cheek:0};
-    x.am.cleansing.ids=['s-sebgel'];x.am.serum.ids=[wk1?'s-serum1':'s-poremix'];x.am.makeup.ids=['s-biore'];
-    x.pm.cleansing.ids=['s-sesu'];x.pm.serum.ids=wk1?(i===0?['s-serum1','s-pore1']:['s-serum1']):['s-poremix'];x.pm.cream.ids=['s-aqcream'];
-    if([1,2,4,6].includes(i))x.pm.spot.ids=['s-azelia'];
-    x.ttypes=v>=4?['염증성','화농성']:['좁쌀'];x.oil=wk1?4:3;x.dry=2;x.food=foods[i];E[k]=x});
-  Object.values(E).forEach(x=>delete x.healT);normalizeChain(E);
-  return{entries:E,today:addDays(start,13),periods:[{start:'2026-08-30',end:'2026-09-04'},{start:'2026-10-05',end:'2026-10-09'}]};
-})();
-$('demoBtn').onclick=()=>{DEMO_ON=!DEMO_ON;selDay=null;renderFlow();window.scrollTo(0,0)};
-
 /* ---------- tabs ---------- */
 function switchTab(t){document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t?'true':'false'));
   document.querySelectorAll('section.panel').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));
-  if(saveTimer)flushSave();if(t!=='flow'&&DEMO_ON)DEMO_ON=false;if(t==='flow')renderFlow();if(t==='inv')renderInv();window.scrollTo(0,0)}
+  if(saveTimer)flushSave();if(t==='inv'){renderInv();renderBackupNote()}if(t==='log')renderLog();window.scrollTo(0,0)}
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 
-const pendingUp=new Set();
-function applySeedLocal(){
-  const todo=SEED_ENTRIES.filter(se=>!seeded.includes(se.id));if(!todo.length)return;
-  missingSeeds().forEach(([id,name,cat,ing,cycle,status,note],i)=>inventory.push({id,name,cat,ing,cycle,status,note,created:Date.now()+i}));
-  todo.forEach(se=>{
-    const x=blank(se.date);
-    ['am','pm'].forEach(t=>Object.entries(se[t]||{}).forEach(([st,ids])=>x[t][st]={ids:[...ids],note:''}));
-    Object.assign(x.troubles,se.troubles||{});Object.assign(x.newT,se.newT||{});
-    ['ttypes','oil','dry','irr','cycle','food'].forEach(f=>{if(se[f]!==undefined)x[f]=clone(se[f])});
-    const old=entries[se.date];if(old&&old.memo)x.memo=old.memo;
-    x.healT=zeroZ();x.savedAt=Date.now();entries[se.date]=x;delete drafts[se.date];seeded.push(se.id);pendingUp.add(se.date);
-  });
-  normalizeChain(entries);lsSave();
-}
-function syncErr(err){const c=(err&&err.code)||'unknown';$('syncNote').hidden=false;$('syncNote').textContent=`계정에 저장하지 못했어요 (${c}). 기록은 이 기기에 남아 있어요.`;$('storeNote').textContent=`계정 저장 오류: ${c}. 기록은 이 기기의 브라우저에 남아 있어요.`}
-async function uploadLocal(remoteKeys){
-  const keys=Object.keys(entries).filter(k=>!remoteKeys.has(k)||pendingUp.has(k));
-  for(const k of keys){inflight.add(k);try{await dbDays.doc(k).set(entries[k]);pendingUp.delete(k)}catch(err){syncErr(err)}finally{inflight.delete(k)}}
-  if(keys.length&&dbProfile)dbProfile.set({inventory,seeded,periods}).catch(syncErr);
-}
-applySeedLocal();
+/* ---------- first run ---------- */
 if(!inventory.length&&!seeded.includes('inv0')){missingSeeds().forEach(([id,name,cat,ing,cycle,status,note],i)=>inventory.push({id,name,cat,ing,cycle,status,note,created:Date.now()+i}));seeded.push('inv0');lsSave()}
-if(PERIOD_SEED&&!seeded.includes(PERIOD_SEED.id)){if(!periods.some(q=>q.start===PERIOD_SEED.start))periods.push({start:PERIOD_SEED.start,end:PERIOD_SEED.end});seeded.push(PERIOD_SEED.id);lsSave()}
 migrateInv();
-renderLog();renderInv();renderFlow();
-$('storeNote').textContent='기록은 이 휴대폰의 브라우저에 저장되고 있어요. 흐름 탭 맨 아래에서 백업 파일을 받아 둘 수 있어요.';
+renderLog();renderInv();
+$('storeNote').textContent='기록은 이 휴대폰의 브라우저에 저장되고 있어요. 아래에서 백업 파일을 받아 둘 수 있어요.';
 
 /* ---------- backup ---------- */
 const BK='skinjournal.backupAt';
@@ -990,86 +678,27 @@ $('restoreFile').onchange=async ev=>{
   const f=ev.target.files[0];if(!f)return;
   let r;try{r=JSON.parse(await f.text())}catch(err){renderBackupNote('백업 파일을 읽지 못했어요. 일지에서 받은 .json 파일인지 확인해 주세요.');return}
   const list=Object.values((r&&r.entries)||{}).filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date||''));
-  if(!list.length){renderBackupNote('백업 파일에 기록이 없어요.');return}
+  if(!list.length&&!Array.isArray(r&&r.periods)){renderBackupNote('백업 파일에 기록이 없어요.');return}
   const ds=list.map(x=>x.date).sort();
-  if(!confirm(`${mdS(ds[0])}~${mdS(ds[ds.length-1])} 기록 ${list.length}일을 불러올게요. 같은 날짜는 더 나중에 저장된 쪽을 남겨요.`))return;
+  if(!confirm(list.length?`${mdS(ds[0])}~${mdS(ds[ds.length-1])} 기록 ${list.length}일을 불러올게요. 같은 날짜는 더 나중에 저장된 쪽을 남겨요.`:'생리 주기와 제품 정보를 불러올게요.'))return;
   if(saveTimer)flushSave();
   let n=0;list.forEach(x=>{const old=entries[x.date];if(!old||(x.savedAt||0)>=(old.savedAt||0)){entries[x.date]=norm(x);delete drafts[x.date];n++}});
   if(Array.isArray(r.inventory)){const ids=new Set(r.inventory.map(p=>p.id));inventory=[...r.inventory,...inventory.filter(p=>!ids.has(p.id))];migrateInv()}
   if(Array.isArray(r.seeded))seeded=[...new Set([...seeded,...r.seeded])];
   if(Array.isArray(r.periods)){const m={};[...periods,...r.periods].forEach(q=>{if(q&&q.start)m[q.start]={...(m[q.start]||{}),...q}});periods=Object.values(m).sort((a,b)=>a.start<b.start?-1:1)}
-  normalizeChain(entries);const ok=lsSave();e=drafts[cur]||savedOf(cur);
-  renderLog();renderFlow();renderInv();
+  const ok=lsSave();e=drafts[cur]||savedOf(cur);
+  renderLog();renderInv();
   renderBackupNote(ok?`${n}일 기록을 불러왔어요.`:'불러왔지만 이 기기에 저장하지 못했어요.');
 };
 $('csvBtn').onclick=()=>{
   if(saveTimer)flushSave();
-  const nm=id=>(prod(id)||{}).name||'';
-  const h=['날짜',...STEPS.map(s=>'아침 '+s[1]),...STEPS.map(s=>'저녁 '+s[1]),'턱입가','코','이마','볼','지금 트러블','새로 난 트러블','트러블모양','T존유분','볼건조','자극','생리주기','음식','메모'];
+  const h=['날짜','단계','생리 주기','기록한 제품','메모'];
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  const rows=Object.values(entries).sort((a,b)=>a.date<b.date?-1:1).map(x=>[x.date,...STEPS.map(([k])=>x.am[k].ids.map(nm).join('/')),...STEPS.map(([k])=>x.pm[k].ids.map(nm).join('/')),x.troubles.chin,x.troubles.nose,x.troubles.forehead,x.troubles.cheek,total(x),totalNew(x),x.ttypes.join('/'),x.oil||'',x.dry||'',x.irr.join('/'),cycleInfo(x.date).label,x.food.join('/'),x.memo].map(q).join(','));
+  const rows=Object.values(entries).filter(hasNote).sort((a,b)=>a.date<b.date?-1:1).map(x=>{const ti=trialInfo(x.date);
+    return [x.date,ti?ti.label:'',cycleInfo(x.date).label,x.prods.map(id=>(prod(id)||{}).name||'').join('/'),x.memo].map(q).join(',')});
   saveFile('skin-journal-'+todayKey+'.csv','﻿'+[h.map(q).join(','),...rows].join('\n'),'text/csv');
 };
 renderBackupNote();
-
-/* ---------- capabilities ---------- */
-(async()=>{
-  if(!window.claude||!window.claude.use)return;
-  try{
-    const [db,user]=await Promise.all([claude.use('db'),claude.use('user')]);
-    const uid=user?await user.id():null;
-    if(db&&uid){
-      dbProfile=db.doc('data/users/'+uid+'/profile');dbDays=dbProfile.collection('days');
-      try{const p=await dbProfile.get();const remote=p.exists&&Array.isArray(p.data().inventory)?p.data().inventory:[];
-        if(p.exists&&Array.isArray(p.data().seeded))seeded=[...new Set([...seeded,...p.data().seeded])];
-        if(p.exists&&Array.isArray(p.data().periods)){const m={};[...periods,...p.data().periods].forEach(q=>{m[q.start]={...(m[q.start]||{}),...q}});periods=Object.values(m).sort((a,b)=>a.start<b.start?-1:1)}
-        const ids=new Set(remote.map(x=>x.id));const merged=[...remote,...inventory.filter(x=>!ids.has(x.id))];
-        const push=merged.length!==remote.length;inventory=merged;migrateInv();lsSave();renderInv();renderLog();if(push)dbProfile.set({inventory,seeded,periods}).catch(()=>{});
-      }catch(err){}
-      let first=true;
-      dbDays.orderBy('date','desc').limit(1000).onSnapshot(snap=>{
-        const remoteKeys=new Set();
-        snap.docs.forEach(d=>{remoteKeys.add(d.id);if(!inflight.has(d.id)&&!pendingUp.has(d.id))entries[d.id]=norm(d.data())});
-        if(first){first=false;uploadLocal(remoteKeys)}
-        normalizeChain(entries);lsSave();if(!drafts[cur])e=savedOf(cur);renderLog();renderFlow();renderInv();
-      },syncErr);
-      dbReady=true;
-      $('storeNote').textContent='기록과 제품 목록은 내 계정에 저장되어 어느 기기에서 열어도 이어져요. 링크를 공유해도 내 기록은 다른 사람에게 보이지 않아요.';
-    }
-  }catch(err){}
-  try{
-    const sample=await claude.use('sample');
-    if(sample){$('aiBlock').hidden=false;
-      $('aiBtn').onclick=async()=>{
-        const list=Object.values(entries).sort((a,b)=>a.date<b.date?-1:1);
-        if(list.length<5){$('aiOut').textContent='최소 5일 이상 기록한 뒤에 분석해 볼게요.';return}
-        const btn=$('aiBtn');btn.disabled=true;$('aiOut').textContent='기록을 읽고 있어요…';
-        const nm=id=>(prod(id)||{}).name||'삭제된 제품';
-        const rt=r=>Object.fromEntries(STEPS.map(([k,l])=>[l,r[k].ids.map(nm).join(', ')+(r[k].note?` (${r[k].note})`:'')]).filter(v=>v[1]));
-        const data=list.slice(-90).map(x=>({d:x.date,wd:WD[parse(x.date).getDay()],am:rt(x.am),pm:rt(x.pm),troubleNow:x.troubles,troubleNew:newOf(x),types:x.ttypes,oilT:x.oil||null,dryCheek:x.dry||null,irritation:x.irr,cycle:cycleInfo(x.date).label||undefined,food:x.food,memo:x.memo||undefined}));
-        const inv=inventory.map(p=>({name:p.name,step:catName(p.cat),ingredients:p.ing,cycleDays:p.cycle||null,status:p.status,why:p.note}));
-        const prompt=`당신은 스킨케어 기록을 분석하는 조력자입니다. 의학적 진단은 하지 말고, 기록에 근거한 패턴과 루틴 조정 제안만 하세요.
-
-사용자 프로필: 복합성 피부(T존 번들, 볼 건조). 고민은 트러블(좁쌀, 블랙헤드, 염증성, 턱·입가 반복, 생리 주기성)과 모공·피지. 새 제품에 반응이 거의 없는 편. 레티노이드는 쓰지 않기로 했으니 추천하지 마세요.
-대화로 정한 루틴: ${JSON.stringify(PLAN)}
-보유 제품: ${JSON.stringify(inv)}
-
-일별 기록(JSON, troubleNow는 그날 얼굴에 있는 부위별 트러블 수, troubleNew는 그날 새로 난 수):
-${JSON.stringify(data)}
-
-한국어로, 마크다운 기호 없이 평문으로 답하세요. 짧은 단락으로:
-1) 전반적 흐름 (숫자 근거)
-2) 트러블과 관련 있어 보이는 제품·요인 2~3개 (데이터가 적으면 솔직히)
-3) 주기를 정한 제품이 주기대로 쓰였는지, 어긋난 날 전후로 피부 변화가 있었는지
-4) 다음 2주 동안 해볼 조정 1~2가지와 확인하려면 무엇을 기록할지`;
-        try{await sample(prompt,{onText:({text})=>{$('aiOut').textContent=text}})}
-        catch(er){$('aiOut').textContent=(er&&er.text)||'';const m={not_granted:'분석 권한이 허용되지 않아 실행하지 않았어요.',rate_limited:'요청이 많아요. 잠시 후 다시 눌러주세요.'};
-          $('aiOut').textContent+=(er&&er.text?'\n\n':'')+(m[er&&er.code]||'분석을 마치지 못했어요. 다시 시도해 주세요.');if(er&&er.code==='not_granted')$('aiBlock').hidden=true}
-        finally{btn.disabled=false}
-      };
-    }
-  }catch(err){}
-})();
 })();
 
 </script>
