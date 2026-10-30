@@ -76,7 +76,8 @@ section.panel.on{display:block}
 .cal button.day.rec .n{color:var(--ink);font-weight:600}
 .cal button.day.today .n{box-shadow:inset 0 0 0 1.5px var(--ink)}
 .cal button.day.sel .n{background:var(--ink);color:var(--canvas);font-weight:600;box-shadow:none}
-.cal button.day .mk{width:18px;height:2px;border-radius:2px}
+.cal button.day .mk,.cal button.day .pk{width:18px;height:2px;border-radius:2px}
+.cal button.day.period .pk{background:var(--r)}
 .cal button.day.purge .mk{background:var(--lx)}
 .cal button.day .n{position:relative}
 .cal button.day.memo .n::after{content:"";position:absolute;top:1px;right:1px;width:7px;height:7px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--canvas)}
@@ -85,7 +86,8 @@ section.panel.on{display:block}
 .cal button.day:disabled .n{color:var(--line)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;padding-left:calc(100% / 14 - 9px);font-size:12px;color:var(--muted)}
 .legend span{display:flex;align-items:center;gap:6px}
-.legend i.bar{width:18px;height:2px;border-radius:2px;background:var(--lx)}
+.legend i.bar,.legend i.pbar{width:18px;height:2px;border-radius:2px;background:var(--lx)}
+.legend i.pbar{background:var(--r)}
 .legend i.memodot{width:7px;height:7px;border-radius:50%;background:var(--ink)}
 .legend i.recdot{width:8px;height:8px;border-radius:50%;background:var(--ink)}
 
@@ -169,9 +171,11 @@ textarea{min-height:96px;resize:vertical}
 .facesum b{font-size:17px;font-weight:700;color:var(--r);line-height:1.2}
 
 /* life */
-.cyclebox{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--bg2);border-radius:14px;padding:12px 14px}
+.cyclebox{display:flex;flex-direction:column;align-items:stretch;gap:12px;background:var(--bg2);border-radius:14px;padding:12px 14px}
 #cycleLabel{display:flex;flex-direction:column;font-size:14px;color:var(--body);line-height:1.45}
 #cycleLabel b{color:var(--ink);font-weight:600}
+.cybtns{display:flex;gap:8px}
+.cybtns .smallbtn{flex:1}
 .smallbtn{border:1px solid var(--line);background:var(--canvas);border-radius:8px;height:38px;padding:0 14px;font-size:13px;font-weight:600;white-space:nowrap}
 .ghost{border:none;background:none;padding:12px 0;width:100%;font-size:14px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;margin-top:8px}
 .danger{color:var(--r-text)}
@@ -306,7 +310,7 @@ textarea{min-height:96px;resize:vertical}
 
     <div class="sec">
       <h2>생리 주기</h2>
-      <div class="cyclebox" style="margin-top:12px"><span id="cycleLabel"></span><button class="smallbtn" id="cycleBtn"></button></div>
+      <div class="cyclebox" style="margin-top:12px"><span id="cycleLabel"></span><div class="cybtns"><button class="smallbtn" id="cyStart"></button><button class="smallbtn" id="cyEnd"></button></div></div>
       <button class="ghost danger" id="delDay" hidden>이 날 기록 지우기</button>
     </div>
   </section>
@@ -517,12 +521,12 @@ function renderCal(){
   for(let i=0;i<first.getDay();i++)h+='<div></div>';
   for(let d=1;d<=days;d++){
     const k=`${y}-${pad(mo)}-${pad(d)}`,x=entries[k],memo=hasNote(x);
-    const ti=trialInfo(k);const cls=['day',x?'rec':'',memo?'memo':'',k===todayKey?'today':'',k===cur?'sel':'',ti&&ti.purge?'purge':''].join(' ');
-    h+=`<button class="${cls}" data-k="${k}" ${k>todayKey||k<RECORD_START?'disabled':''} aria-label="${mo}월 ${d}일${memo?', 메모 있음':''}${ti&&ti.purge?', 모공비움':''}"><span class="n">${d}</span><span class="mk"></span></button>`;
+    const ti=trialInfo(k),per=k<=todayKey&&cycleInfo(k).code==='on';const cls=['day',x?'rec':'',memo?'memo':'',per?'period':'',k===todayKey?'today':'',k===cur?'sel':'',ti&&ti.purge?'purge':''].join(' ');
+    h+=`<button class="${cls}" data-k="${k}" ${k>todayKey||k<RECORD_START?'disabled':''} aria-label="${mo}월 ${d}일${memo?', 메모 있음':''}${ti&&ti.purge?', 모공비움':''}${per?', 생리':''}"><span class="n">${d}</span><span class="mk"></span><span class="pk"></span></button>`;
   }
   $('cal').innerHTML=h;
   $('cal').querySelectorAll('button.day').forEach(b=>b.onclick=()=>selectDay(b.dataset.k));
-  $('legend').innerHTML=(PLAN.trial?'<span><i class="bar"></i>모공비움 주</span>':'')+'<span><i class="memodot"></i>메모한 날</span>';
+  $('legend').innerHTML=(PLAN.trial?'<span><i class="bar"></i>모공비움 주</span>':'')+'<span><i class="pbar"></i>생리</span><span><i class="memodot"></i>메모한 날</span>';
 }
 function selectDay(k){if(k<RECORD_START||k>todayKey)return;if(saveTimer)flushSave();cur=k;pickOpen=false;e=drafts[k]||savedOf(k);viewMonth=k.slice(0,7);renderLog()}
 $('prevM').onclick=()=>{const[y,m]=viewMonth.split('-').map(Number);const v=key(new Date(y,m-2,1)).slice(0,7);if(v<MIN_MONTH)return;viewMonth=v;renderCal()};
@@ -558,12 +562,16 @@ $('prodPickBtn').onclick=()=>{pickOpen=!pickOpen;renderMemo()};
 function renderCycle(){
   const ci=cycleInfo(cur);
   $('cycleLabel').innerHTML=ci.l1?`<span>${esc(ci.l1)}</span>${ci.l2?`<b>${esc(ci.l2)}</b>`:''}`:'<span>기록된 생리 시작일이 없어요</span>';
-  const w=cur===todayKey?'오늘':mdS(cur);
-  const isStart=periods.find(q=>q.start===cur);const open=[...periods].sort((a,b)=>a.start<b.start?-1:1).reverse().find(q=>q.start<=cur&&!q.end&&diff(q.start,cur)<=12&&!periods.some(r=>r.start>q.start&&r.start<=cur));
-  const btn=$('cycleBtn');
-  if(isStart){btn.textContent='시작일 취소';btn.onclick=()=>{periods=periods.filter(q=>q.start!==cur);persistProfile()}}
-  else if(open&&cur>open.start){btn.textContent=`${w} 생리 끝`;btn.onclick=()=>{open.end=cur;persistProfile()}}
-  else{btn.textContent=`${w} 생리 시작`;btn.onclick=()=>{periods.push({start:cur,end:null});periods.sort((a,b)=>a.start<b.start?-1:1);persistProfile()}}
+  const w=cur===todayKey?'오늘':mdS(cur),ps=[...periods].sort((a,b)=>a.start<b.start?-1:1);
+  const isStart=ps.find(q=>q.start===cur),isEnd=ps.find(q=>q.end===cur);
+  // 고른 날 이전의 가장 가까운 시작일. 2주 안이면 그날을 끝으로 기록할 수 있다
+  const last=[...ps].reverse().find(q=>q.start<cur),inRange=last&&(last.end?cur<=last.end:diff(last.start,cur)<=9);
+  const sb=$('cyStart'),eb=$('cyEnd');
+  if(isStart){sb.textContent='시작일 취소';sb.onclick=()=>{periods=periods.filter(q=>q.start!==cur);persistProfile()}}
+  else{sb.textContent=`${w} 생리 시작`;sb.onclick=()=>{periods.push({start:cur,end:null});persistProfile()}}
+  sb.hidden=!isStart&&!!inRange;
+  if(isEnd){eb.textContent='종료일 취소';eb.onclick=()=>{isEnd.end=null;persistProfile()};eb.hidden=false}
+  else{eb.textContent=`${w} 생리 끝`;eb.onclick=()=>{last.end=cur;persistProfile()};eb.hidden=isStart||!last||diff(last.start,cur)>14}
 }
 function persistProfile(){lsSave();renderLog()}
 
